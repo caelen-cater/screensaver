@@ -227,5 +227,20 @@
         document.addEventListener('fullscreenchange', function() {
             updateInfo();
         });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const requestWakeLock = async () => {
+                try {
+                    const wakeLock = await navigator.wakeLock.request('screen');
+                    console.log('Screen Wake Lock is active');
+                    wakeLock.addEventListener('release', () => {
+                        console.log('Screen Wake Lock was released');
+                    });
+                } catch (err) {
+                    console.error(`${err.name}, ${err.message}`);
+                }
+            };
+            requestWakeLock();
+        });
     </script>
 </body>
