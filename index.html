@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">    
     <style>
         .body {
             margin: 0;
@@ -39,9 +40,10 @@
             text-overflow: ellipsis;
             overflow: hidden;
             white-space: nowrap;
-            background: linear-gradient(rgba(0, 0, 0, 0), transparent);
+            background: linear-gradient(rgba(0, 0, 0, 0.0), transparent);
             padding: 10px;
             border-radius: 25px;
+            font-family: 'Roboto', sans-serif;
         }
     
         #time {
@@ -188,6 +190,13 @@
                         isPlaying = true;
                         console.log('Playing new song');
                     }
+
+                    function updateTime() {
+                        document.getElementById('time').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+                    }
+                    
+                    updateTime();
+                    setInterval(updateTime, 1000);
                 });
         }
     
