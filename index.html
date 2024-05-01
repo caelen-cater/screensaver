@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        .body {
+            margin: 0;
+            padding: 0;
+        }
+    
+        #backgroundCanvas, #nextBackgroundCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: -1;
+            transition: opacity 5s;
+        }
+    
+        #nextBackgroundCanvas {
+            opacity: 0;
+        }
+    
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+    
+        .info {
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            color: white;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            background: linear-gradient(rgba(0, 0, 0, 0.5), transparent);
+            padding: 10px;
+            border-radius: 25px;
+        }
+    
+        #time {
+            font-size: 60px;
+        }
+    
+        #date {
+            font-size: 30px;
+        }
+    
+        .weather {
+            margin-top: 20px;
+        }
+    
+        .weather img {
+            height: 60px;
+            width: 60px;
+        }
+    
+        #temperature {
+            font-size: 60px;
+        }
+    
+        #city {
+            font-size: 20px;
+        }
+    
+        .buttons {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            gap: 10px;
+        }
+    
+        .button {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            border-radius: 30%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: transform 0.3s ease-in-out;
+            z-index: 2;
+            background: rgba(0, 0, 0, 0.5);
+            background-size: 60%;
+            background-repeat: no-repeat;
+            background-position: center;
+        }
+    
+        .button:hover {
+            transform: scale(1.2);
+        }
+    
+        #websiteButton {
+            background-image: url('https://cdn.cirrus.center/api/screensaver/icons/website.png');
+        }
+    
+        #githubButton {
+            background-image: url('https://cdn.cirrus.center/api/screensaver/icons/github.png');
+        }
+    
+        #musicButton {
+            background-image: url('https://cdn.cirrus.center/api/screensaver/icons/music_enabled.png');
+        }
+    
+        #fullscreenButton {
+            background-image: url('https://cdn.cirrus.center/api/screensaver/icons/fullscreen_enter.png');
+        }
+    </style>
+    <title>Screensaver | Caelen.dev</title>
+</head>
+<body>
+    <canvas id="backgroundCanvas"></canvas>
+    <canvas id="nextBackgroundCanvas"></canvas>
+    <div class="overlay">
+        <div class="info">
+            <div id="time"></div>
+            <div id="date"></div>
+            <div class="weather">
+                <img id="icon" src="" alt="Weather Icon">
+                <span id="temperature"></span>
+                <div id="city"></div>
+            </div>
+        </div>
+    </div>
+    <div class="buttons">
+        <a href="https://caelen.dev" target="_blank">
+            <div id="websiteButton" class="button"></div>
+        </a>
+        <a href="https://github.com/caelen-cater/screensaver" target="_blank">
+            <div id="githubButton" class="button"></div>
+        </a>
+        <div id="musicButton" class="button"></div>
+        <div id="fullscreenButton" class="button"></div>
+    </div>
+    <script>
+        let currentCanvas = document.getElementById('backgroundCanvas');
+        let nextCanvas = document.getElementById('nextBackgroundCanvas');
+        let audio = new Audio();
+        let isPlaying = false;
+        let userPaused = true;
+    
+        function updateInfo() {
+            fetch(`https://caelen.dev/page/screensaver/api/meta/?timestamp=${new Date().getTime()}`)
+                .then(response => response.json())
+                .then(data => {
+                    let img = new Image();
+                    img.onload = function() {
+                        let ctx = nextCanvas.getContext('2d');
+                        nextCanvas.width = window.innerWidth;
+                        nextCanvas.height = window.innerHeight;
+                        let aspectRatio = this.naturalWidth / this.naturalHeight;
+                        let targetWidth, targetHeight;
+                        if (aspectRatio < window.innerWidth / window.innerHeight) {
+                            targetWidth = nextCanvas.width;
+                            targetHeight = nextCanvas.width / aspectRatio;
+                        } else {
+                            targetHeight = nextCanvas.height;
+                            targetWidth = nextCanvas.height * aspectRatio;
+                        }
+                        ctx.drawImage(this, (nextCanvas.width - targetWidth) / 2, (nextCanvas.height - targetHeight) / 2, targetWidth, targetHeight);
+    
+                        let temp = currentCanvas;
+                        currentCanvas = nextCanvas;
+                        nextCanvas = temp;
+    
+                        currentCanvas.style.opacity = '1';
+                        nextCanvas.style.opacity = '0';
+                    };
+                    img.src = data.background;
+    
+                    document.getElementById('time').textContent = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
+                    document.getElementById('date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'long', day: 'numeric' });
+                    document.getElementById('icon').src = data.icon;
+                    document.getElementById('temperature').textContent = data.temperature;
+                    document.getElementById('city').textContent = data.location;
+    
+                    if (audio.paused && !userPaused) {
+                        audio.src = data.music;
+                        audio.play();
+                        isPlaying = true;
+                        console.log('Playing new song');
+                    }
+                });
+        }
+    
+        audio.addEventListener('ended', function() {
+            audio.pause();
+            audio.src = '';
+            isPlaying = false;
+            if (!userPaused) {
+                updateInfo();
+            }
+        });
+    
+        updateInfo();
+        setInterval(updateInfo, 30000);
+    
+        document.getElementById('fullscreenButton').addEventListener('click', function() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                document.documentElement.requestFullscreen();
+            }
+        });
+    
+        document.getElementById('musicButton').addEventListener('click', function() {
+            if (audio.paused) {
+                userPaused = false;
+                updateInfo();
+                console.log('Music play clicked');
+            } else {
+                userPaused = true;
+                audio.pause();
+                isPlaying = false;
+                console.log('Music pause clicked');
+            }
+        });
+    
+        document.addEventListener('fullscreenchange', function() {
+            updateInfo();
+        });
+    </script>
+</body>
