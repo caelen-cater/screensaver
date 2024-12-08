@@ -150,7 +150,7 @@
         let userPaused = true;
     
         function updateInfo() {
-            fetch(`https://caelen.dev/page/screensaver/api/?timestamp=${new Date().getTime()}`)
+            fetch('https://caelen.dev/api/current-state/')
                 .then(response => response.json())
                 .then(data => {
                     let img = new Image();
@@ -253,3 +253,4 @@
         });
     </script>
 </body>
+</html>
